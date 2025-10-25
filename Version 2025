@@ -1,0 +1,85 @@
+package com.example.searchlist;
+
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.Bundle;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.util.ArrayList;
+
+public class MainActivity extends AppCompatActivity {
+
+    private ListView listView;
+    private ArrayList<String> searchSites;
+    private ArrayAdapter<String> adapter;
+
+    private static final String PREF_NAME = "SearchPrefs";
+    private static final String KEY_SITES = "sites";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        listView = findViewById(R.id.listView);
+
+        // SharedPreferences
+        searchSites = getSitesFromPrefs();
+
+        // SharedPreferences 
+        if (searchSites.isEmpty()) {
+            searchSites.add("https://www.google.com");
+            searchSites.add("https://www.bing.com");
+            searchSites.add("https://search.yahoo.com");
+            searchSites.add("https://duckduckgo.com");
+            searchSites.add("https://www.baidu.com");
+            saveSitesToPrefs(searchSites);
+        }
+
+     
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, searchSites);
+        listView.setAdapter(adapter);
+
+     
+        listView.setOnItemClickListener((adapterView, view, position, id) -> {
+            String url = searchSites.get(position);
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        });
+    }
+
+   SharedPreferences
+    private void saveSitesToPrefs(ArrayList<String> sites) {
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        JSONArray jsonArray = new JSONArray(sites);
+        editor.putString(KEY_SITES, jsonArray.toString());
+        editor.apply();
+    }
+
+  SharedPreferences
+    private ArrayList<String> getSitesFromPrefs() {
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        String json = prefs.getString(KEY_SITES, null);
+        ArrayList<String> list = new ArrayList<>();
+        if (json != null) {
+            try {
+                JSONArray jsonArray = new JSONArray(json);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    list.add(jsonArray.getString(i));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return list;
+    }
+}
